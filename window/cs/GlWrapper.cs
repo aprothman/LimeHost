@@ -59,8 +59,8 @@ namespace LimeWrapper
 
         public static bool SetupPixelFormat(IntPtr hwnd)
         {
-            IntPtr dc = IntPtr.Zero;
-            IntPtr pformat = IntPtr.Zero;
+            var dc = IntPtr.Zero;
+            var hformat = default(GCHandle);
 
             try {
                 dc = GetDC(hwnd);
@@ -76,15 +76,16 @@ namespace LimeWrapper
                 format.cColorBits = 24;
                 format.cStencilBits = 32;
 
-                pformat = Marshal.AllocHGlobal(format.nSize);
-                Marshal.StructureToPtr(format, pformat, false);
-                var formatIdx = ChoosePixelFormat(dc, pformat);
+                hformat = GCHandle.Alloc(format, GCHandleType.Pinned);
+                var ppfd = hformat.AddrOfPinnedObject();
+                
+                var formatIdx = ChoosePixelFormat(dc, ppfd);
 
-                return SetPixelFormat(dc, formatIdx, pformat);
+                return SetPixelFormat(dc, formatIdx, ppfd);
             }
             finally {
-                if (IntPtr.Zero != pformat) {
-                    Marshal.FreeHGlobal(pformat);
+                if (hformat.IsAllocated) {
+                    hformat.Free();
                 }
                 if (IntPtr.Zero != dc) {
                     ReleaseDC(hwnd, dc);
