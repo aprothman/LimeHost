@@ -1,0 +1,82 @@
+package;
+
+import sys.io.Process;
+import hxp.*;
+
+class Build extends hxp.Script {
+
+    public function new() {
+        
+        super();
+
+        var isX86 = (X86 == System.hostArchitecture);
+        var bits = isX86 ? "32" : "64";
+
+        var hxcppPath = Haxelib.getPath(new Haxelib("hxcpp"));
+        var hxcppInclude = Path.combine(hxcppPath, "include");
+
+        if (WINDOWS == System.hostPlatform) {
+
+            var bitSuffix = isX86 ? "" : bits;
+            var mscvSetup = Path.combine(hxcppPath, "toolchain/msvc" + bitSuffix + "-setup.bat");
+
+            setMsvcEnv(mscvSetup);
+
+            var hxcppLib = Path.combine(hxcppPath, "lib/Windows") + bits;
+            var openflLib = "libApplicationMain.lib";
+            var limeLib = "liblime-19.lib";
+            var stdLib = "libstd-19.lib";
+            var regexpLib = "libregexp-19.lib";
+            var zlibLib = "libzlib-19.lib";
+            var localLib = "lib/bin";
+            var localInclude = "include";
+
+            var outName = "LimeEngine" + bitSuffix + ".dll";
+
+            System.runCommand("", "cl.exe", ["/LD", "/Fe"+outName, "EngineWrapper.cpp", openflLib, limeLib, 
+                "/I"+hxcppInclude, "/I"+localInclude, "user32.lib", "kernel32.lib", "gdi32.lib",
+                "advapi32.lib", "winmm.lib", "imm32.lib", "ole32.lib", "oleaut32.lib", "version.lib",
+                "ws2_32.lib", "wldap32.lib", "shell32.lib", "comdlg32.lib", "comsuppw.lib", "usp10.lib", 
+                "rpcrt4.lib", "dwrite.lib", "setupapi.lib", "uuid.lib", "shlwapi.lib", "opengl32.lib",
+                stdLib, regexpLib, zlibLib, "/link", "/LIBPATH:"+hxcppLib, "/LIBPATH:"+localLib]);
+        }
+
+        // This code taken from:
+        // https://github.com/HaxeFoundation/hxcpp/blob/master/tools/hxcpp/Setup.hx
+        private static function setMsvcEnv(msvcBat:String) {
+
+            var vcSetupProc = new Process("cmd.exe", ["/C", msvcBat]);
+            var varsFound = false;
+
+            try {
+
+                while (true) {
+
+                    var line = vcSetupProc.stdout.readLine();
+                    if ("HXCPP_VARS" == line) {
+
+                        varsFound = true;
+
+                    } else if (varsFound) {
+
+                        var pos = str.indexOf("=");
+                        var name = str.substr(0, pos);
+                        switch (name.toLowerCase()) {
+
+                            case "path", "vcinstalldir", "windowssdkdir","framework35version",
+                                 "frameworkdir", "frameworkdir32", "frameworkversion",
+                                 "frameworkversion32", "devenvdir", "include", "lib", "libpath", "hxcpp_xp_define",
+                                 "hxcpp_hack_pdbsrv" :
+
+                                var value = str.substr(pos+1);
+
+                                Sys.putEnv(name, value);
+                        }
+                        
+                    }
+                }
+            } catch (e:Dynamic) {
+            };
+        }
+    }
+}
