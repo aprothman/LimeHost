@@ -26,8 +26,6 @@ extern "C"
         hxcpp_set_top_of_stack();
         
 		lime_register_prims();
-		lime_cairo_register_prims();
-		lime_opengl_register_prims();
 
         const char* err = NULL;
 		err = hxRunLibrary();

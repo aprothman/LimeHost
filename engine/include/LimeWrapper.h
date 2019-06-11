@@ -24,8 +24,6 @@ extern "C"
 	//
 
 	int lime_register_prims();
-	int lime_cairo_register_prims();
-	int lime_opengl_register_prims();
 }
 
 //
