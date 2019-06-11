@@ -65,7 +65,7 @@ namespace LimeWrapper
             try {
                 dc = GetDC(hwnd);
 
-                PIXELFORMATDESCRIPTOR format = default(PIXELFORMATDESCRIPTOR);
+                var format = default(PIXELFORMATDESCRIPTOR);
                 format.nSize = (Int16)Marshal.SizeOf<PIXELFORMATDESCRIPTOR>();
                 format.nVersion = 1;
                 format.dwFlags = PFD_DRAW_TO_WINDOW
